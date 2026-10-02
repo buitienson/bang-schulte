@@ -230,6 +230,8 @@ details.how ol { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 4px; }
 @keyframes updPulse { 50% { box-shadow: 0 0 0 12px color-mix(in oklab, var(--accent), transparent 85%), 0 10px 28px -8px rgba(0,0,0,.45) } }
 .count small { position: absolute; top: 14%; font-weight: 700; font-size: 15px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
 
+.ver { margin-top: auto; padding-top: 16px; text-align: center; font-size: 11px; color: var(--muted); opacity: .7; font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 </style>
 </head>
@@ -359,6 +361,7 @@ details.how ol { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 4px; }
       </div>
     </div>
   </section>
+  <footer class="ver" id="ver"></footer>
 </div>
 
 <script>
@@ -545,7 +548,11 @@ details.how ol { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 4px; }
   }
 
   // ---------- Update pill: compare with version.json on the server ----------
-  const APP_VERSION = "20261002-214252";
+  const APP_VERSION = "20261002-214359";
+  {
+    const m = APP_VERSION.match(/^(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})/);
+    $('ver').textContent = m ? 'Phiên bản ' + m[3] + '/' + m[2] + '/' + m[1] + ' ' + m[4] + ':' + m[5] : 'Phiên bản thử';
+  }
   (() => {
     if (location.protocol === 'file:' || APP_VERSION === 'dev') return;
     let latest = null;
