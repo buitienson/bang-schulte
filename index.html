@@ -152,8 +152,6 @@ details.how ol { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 4px; }
 .progress i { display: block; height: 100%; width: 0; background: var(--good); transition: width .15s; }
 
 .stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; min-height: 0; }
-.target { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--muted); height: 44px; }
-.target b { font-family: var(--f-display); font-size: 30px; color: var(--ink); min-width: 2ch; text-align: center; font-variant-numeric: tabular-nums; }
 
 .board {
   --n: 5;
@@ -246,11 +244,11 @@ details.how ol { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 4px; }
       <div class="modes" id="modes">
         <button class="mode" data-mode="normal">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-          <b>Thường</b><span>Ô đã bấm mờ đi, có gợi ý số cần tìm.</span>
+          <b>Thường</b><span>Ô đã bấm mờ đi.</span>
         </button>
         <button class="mode" data-mode="master">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
-          <b>Cao thủ</b><span>Ô không đổi sau khi bấm, không có gợi ý. Phải tự nhớ.</span>
+          <b>Cao thủ</b><span>Ô không đổi sau khi bấm. Phải tự nhớ đã đến số nào.</span>
         </button>
         <button class="mode" data-mode="shuffle">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
@@ -304,7 +302,6 @@ details.how ol { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 4px; }
       <div class="progress"><i id="prog"></i></div>
     </div>
     <div class="stage">
-      <div class="target" id="target">Tìm số <b id="next">1</b></div>
       <div class="board" id="board"></div>
       <div class="chips">
         <span class="chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg><b id="cnt">0 / 25</b></span>
@@ -472,7 +469,6 @@ details.how ol { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 4px; }
     if (S.dot) { const d = document.createElement('div'); d.className = 'dot'; board.append(d); }
     $('gSize').textContent = S.n + '×' + S.n;
     $('gMode').textContent = label(S.mode, S.dir);
-    $('target').style.visibility = S.mode === 'master' ? 'hidden' : 'visible';
     paintBoard(); paintHud(); $('timer').textContent = fmt(0);
     show('game');
     try { navigator.wakeLock?.request('screen').then(l => lock = l, () => {}); } catch {}
@@ -499,8 +495,6 @@ details.how ol { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 4px; }
     });
   }
   function paintHud() {
-    const fin = G.k >= G.N;
-    $('target').innerHTML = fin ? '<b>Xong!</b>' : 'Tìm số <b id="next">' + target() + '</b>';
     $('cnt').textContent = G.k + ' / ' + G.N;
     $('errs').textContent = G.errs;
     $('prog').style.width = (G.k / G.N * 100) + '%';
