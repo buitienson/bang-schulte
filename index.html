@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#EDF1EC" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0E1917" media="(prefers-color-scheme: dark)">
-<meta name="description" content="Bảng Schulte - game luyện tập trung, bấm các số theo thứ tự tăng dần.">
+<meta name="description" content="Bảng Schulte - game luyện tập trung, bấm các số theo thứ tự xuôi hoặc ngược.">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-512.png">
 <link rel="manifest" href="manifest.webmanifest">
@@ -128,6 +128,7 @@ button:focus-visible, input:focus-visible + .sw { outline: 3px solid var(--accen
 
 .look { display: grid; gap: 10px; }
 .seg { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--surface); border: 1.5px solid var(--line); border-radius: 12px; padding: 3px; gap: 3px; }
+.seg.dir { grid-template-columns: 1fr 1fr; }
 .seg button { border: 0; background: none; border-radius: 9px; padding: 8px 4px; font-weight: 600; font-size: 14px; color: var(--muted); }
 .seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
 .pals { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
@@ -218,7 +219,7 @@ details.how ol { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 4px; }
     <header class="brand">
       <div>
         <h1>Bảng <span>Schulte</span></h1>
-        <p>Bấm các số theo thứ tự tăng dần, nhanh nhất có thể. Luyện tập trung và tầm nhìn rộng.</p>
+        <p>Bấm các số theo thứ tự xuôi hoặc ngược, nhanh nhất có thể. Luyện tập trung và tầm nhìn rộng.</p>
       </div>
       <div class="mini" aria-hidden="true">
         <i style="background:var(--t1)">7</i><i style="background:var(--t2)">2</i><i style="background:var(--t3)">5</i>
@@ -230,6 +231,14 @@ details.how ol { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 4px; }
     <div>
       <p class="label">Kích thước bảng</p>
       <div class="sizes" id="sizes"></div>
+    </div>
+
+    <div>
+      <p class="label">Chiều đếm</p>
+      <div class="seg dir" id="dirSeg">
+        <button data-dir="up">Xuôi · 1 → 25</button>
+        <button data-dir="down">Ngược · 25 → 1</button>
+      </div>
     </div>
 
     <div>
@@ -277,7 +286,7 @@ details.how ol { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 4px; }
       <summary>Cách chơi và mẹo</summary>
       <ol>
         <li>Đếm ngược 3 giây, đồng hồ chạy ngay sau đó.</li>
-        <li>Bấm 1, 2, 3… đến số cuối cùng. Bấm sai bị tính lỗi, không bị cộng giờ.</li>
+        <li>Xuôi: bấm 1, 2, 3… đến số cuối. Ngược: bấm từ số lớn nhất về 1. Bấm sai bị tính lỗi, không bị cộng giờ.</li>
         <li>Mẹo: mắt nhìn vào giữa bảng, tìm số bằng khóe mắt thay vì đảo mắt khắp bảng. Bật "Điểm nhìn ở giữa" để luyện cách này.</li>
         <li>Mốc tham khảo cho bảng 5×5: dưới 40 giây là ổn, dưới 25 giây là tốt, dưới 18 giây là rất nhanh.</li>
       </ol>
@@ -334,7 +343,7 @@ details.how ol { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 4px; }
     set(k, v) { try { localStorage.setItem('schulte:' + k, JSON.stringify(v)); } catch {} }
   };
 
-  const S = Object.assign({ n: 5, mode: 'normal', color: true, dot: false, sound: false, theme: 'auto', pal: 'mint' }, store.get('settings', {}));
+  const S = Object.assign({ n: 5, mode: 'normal', color: true, dot: false, sound: false, theme: 'auto', pal: 'mint', dir: 'up' }, store.get('settings', {}));
   const save = () => store.set('settings', S);
 
   // ---------- Theme + palette ----------
@@ -403,14 +412,22 @@ details.how ol { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 4px; }
     $(id).onchange = e => { S[k] = e.target.checked; save(); if (k === 'sound' && S.sound) beep(880, .05); };
   });
 
-  const key = () => S.n + ':' + S.mode;
+  const keyOf = (n, mode, dir) => n + ':' + mode + (dir === 'down' ? ':down' : '');
+  const key = () => keyOf(S.n, S.mode, S.dir);
+  const label = (mode, dir) => MODES[mode] + (dir === 'down' ? ' · Ngược' : ' · Xuôi');
+  document.querySelectorAll('[data-dir]').forEach(b => b.onclick = () => { S.dir = b.dataset.dir; save(); paintHome(); });
   function paintHome() {
     sizes.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.n === S.n));
     document.querySelectorAll('.mode').forEach(b => b.setAttribute('aria-pressed', b.dataset.mode === S.mode));
-    $('startSub').textContent = S.n + '×' + S.n + ' · ' + MODES[S.mode];
+    const NN = S.n * S.n;
+    document.querySelectorAll('[data-dir]').forEach(b => {
+      b.setAttribute('aria-pressed', b.dataset.dir === S.dir);
+      b.textContent = b.dataset.dir === 'up' ? 'Xuôi · 1 → ' + NN : 'Ngược · ' + NN + ' → 1';
+    });
+    $('startSub').textContent = S.n + '×' + S.n + ' · ' + label(S.mode, S.dir);
     const best = store.get('best:' + key(), null), hist = store.get('hist:' + key(), []);
     $('records').innerHTML =
-      '<div class="rec-top"><span>Kỷ lục ' + S.n + '×' + S.n + ' · ' + MODES[S.mode] + '</span><b>' + (best ? fmt(best) : '--:--.--') + '</b></div>' +
+      '<div class="rec-top"><span>Kỷ lục ' + S.n + '×' + S.n + ' · ' + label(S.mode, S.dir) + '</span><b>' + (best ? fmt(best) : '--:--.--') + '</b></div>' +
       '<div class="hist">' + (hist.length
         ? hist.slice(0, 6).map(h => '<span>' + short(h.t) + (h.e ? ' · ' + h.e + ' lỗi' : '') + '</span>').join('')
         : '<span class="empty">Chưa có ván nào ở mức này. Chơi ván đầu để lập kỷ lục.</span>') + '</div>';
@@ -441,7 +458,7 @@ details.how ol { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 4px; }
 
   function start() {
     const N = S.n * S.n;
-    G = { n: S.n, N, mode: S.mode, vals: shuffle([...Array(N)].map((_, i) => i + 1)), next: 1, errs: 0, t0: 0, running: false, timers: [] };
+    G = { n: S.n, N, mode: S.mode, vals: shuffle([...Array(N)].map((_, i) => i + 1)), dir: S.dir, k: 0, errs: 0, t0: 0, running: false, timers: [] };
     board.style.setProperty('--n', S.n);
     board.classList.toggle('colored', S.color);
     board.innerHTML = '';
@@ -454,7 +471,7 @@ details.how ol { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 4px; }
     }
     if (S.dot) { const d = document.createElement('div'); d.className = 'dot'; board.append(d); }
     $('gSize').textContent = S.n + '×' + S.n;
-    $('gMode').textContent = MODES[S.mode];
+    $('gMode').textContent = label(S.mode, S.dir);
     $('target').style.visibility = S.mode === 'master' ? 'hidden' : 'visible';
     paintBoard(); paintHud(); $('timer').textContent = fmt(0);
     show('game');
@@ -470,20 +487,23 @@ details.how ol { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 4px; }
     G.timers.push(setTimeout(step, 700));
   }
 
+  const target = () => G.dir === 'down' ? G.N - G.k : G.k + 1;
+  const cleared = v => G.dir === 'down' ? v > G.N - G.k : v <= G.k;
   function paintBoard() {
     const cells = board.querySelectorAll('.cell');
     cells.forEach((b, i) => {
       const v = G.vals[i];
       b.textContent = v; b.dataset.v = v;
-      b.classList.toggle('done', G.mode !== 'master' && v < G.next);
+      b.classList.toggle('done', G.mode !== 'master' && cleared(v));
       b.setAttribute('aria-label', 'Số ' + v);
     });
   }
   function paintHud() {
-    $('next').textContent = Math.min(G.next, G.N);
-    $('cnt').textContent = (G.next - 1) + ' / ' + G.N;
+    const fin = G.k >= G.N;
+    $('target').innerHTML = fin ? '<b>Xong!</b>' : 'Tìm số <b id="next">' + target() + '</b>';
+    $('cnt').textContent = G.k + ' / ' + G.N;
     $('errs').textContent = G.errs;
-    $('prog').style.width = ((G.next - 1) / G.N * 100) + '%';
+    $('prog').style.width = (G.k / G.N * 100) + '%';
   }
   function loop() {
     if (!G || !G.running) return;
@@ -496,10 +516,10 @@ details.how ol { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 4px; }
     if (!b || !G || !G.running) return;
     e.preventDefault();
     const v = +b.dataset.v;
-    if (v === G.next) {
-      G.next++;
-      beep(660 + (G.next % 8) * 30, .05, 'triangle', .06);
-      if (G.mode === 'shuffle' && G.next <= G.N) {
+    if (v === target()) {
+      G.k++;
+      beep(660 + (G.k % 8) * 30, .05, 'triangle', .06);
+      if (G.mode === 'shuffle' && G.k < G.N) {
         G.vals = shuffle(G.vals);
         paintBoard();
       } else {
@@ -507,8 +527,8 @@ details.how ol { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 4px; }
         b.classList.remove('hit'); void b.offsetWidth; b.classList.add('hit');
       }
       paintHud();
-      if (G.next > G.N) finish();
-    } else if (G.mode !== 'master' && v < G.next) {
+      if (G.k >= G.N) finish();
+    } else if (G.mode !== 'master' && cleared(v)) {
       // tapping an already-cleared tile is ignored, not counted as a mistake
     } else {
       G.errs++; paintHud();
@@ -537,14 +557,14 @@ details.how ol { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 4px; }
     const t = performance.now() - G.t0;
     stop();
     $('timer').textContent = fmt(t);
-    const k = G.n + ':' + G.mode;
+    const k = keyOf(G.n, G.mode, G.dir);
     const prev = store.get('best:' + k, null);
     const isNew = prev == null || t < prev;
     if (isNew) store.set('best:' + k, t);
     const hist = store.get('hist:' + k, []); hist.unshift({ t, e: G.errs, d: Date.now() }); store.set('hist:' + k, hist.slice(0, 20));
 
     const per = t / 1000 / G.N;
-    $('rBadge').textContent = isNew && prev != null ? 'Kỷ lục mới' : G.n + '×' + G.n + ' · ' + MODES[G.mode];
+    $('rBadge').textContent = isNew && prev != null ? 'Kỷ lục mới' : G.n + '×' + G.n + ' · ' + label(G.mode, G.dir);
     $('rBadge').classList.toggle('new', isNew && prev != null);
     $('rTime').textContent = fmt(t);
     $('rGrade').textContent = grade(per, G.errs);
